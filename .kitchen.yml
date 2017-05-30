@@ -1,0 +1,34 @@
+---
+driver:
+  name: gce
+  google_project: redguide-169212
+  zone: us-east1-c
+  machine_type: g1-small
+  google_client_email: aleksey.hariton@gmail.com
+  google_json_key_location: /home/stalker/Downloads/RedGuide-ecdbaf707e13.json
+  service_account_name: 319714938377-compute@developer.gserviceaccount.com
+
+provisioner:
+  name: ansible_playbook
+  roles_path: roles
+  hosts: tomcat-servers
+  require_ansible_repo: true
+  ansible_verbose: true
+  ansible_version: latest
+  require_chef_for_busser: false
+
+platforms:
+  - name: centos-7
+    driver:
+      image_project: centos-cloud
+      image_name: centos-7-v20170124
+
+transport:
+  name: sftp
+  username: aleksey_hariton
+
+suites:
+  - name: druid
+
+verifier:
+  name: inspec
