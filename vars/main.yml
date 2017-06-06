@@ -1,0 +1,18 @@
+---
+# vars file for druid
+
+druid_version: 0.10.0
+druid:
+  home: "/opt/druid"
+  base_dir: "/opt/druid-{{druid_version}}/"
+  services:
+    - broker
+    - coordinator
+    - historical
+    - middleManager
+    - overlord
+
+zookeeper_version: 3.4.6
+zookeeper:
+  home: "/opt/zookeeper"
+  base_dir: "/opt/zookeeper-{{zookeeper_version}}/"

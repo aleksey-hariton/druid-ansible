@@ -1,0 +1,139 @@
+---
+# tasks file for druid
+
+- name: Install Java 1.8
+  package:
+    name: java-1.8.0-openjdk
+    state: present
+
+
+
+################################################################################################
+#
+#                             Zookeeper
+#
+################################################################################################
+- name: Create Zookeeper base dir
+  file: "path={{zookeeper['base_dir']}} state=directory"
+
+- name: Download and utar Zookeper
+  unarchive:
+    src:  "http://www.gtlib.gatech.edu/pub/apache/zookeeper/zookeeper-{{zookeeper_version}}/zookeeper-{{zookeeper_version}}.tar.gz"
+    remote_src: True
+    dest: "{{zookeeper['base_dir']}}"
+    creates: "{{zookeeper['base_dir']}}/zookeeper-{{zookeeper_version}}.jar"
+    extra_opts: "--strip-components=1"
+
+- name: Zookeper config
+  template:
+    src: zoo.cfg.j2
+    dest: "{{zookeeper['base_dir']}}/conf/zoo.cfg"
+  notify: restart zookeeper
+
+- name: Check if Zookeeper is running
+  command: bash -c "ps -ef | grep zookeepe[r]"
+  ignore_errors: yes
+  changed_when: false
+  register: service_zookeeper_status
+
+- name: Report status of Zookeeper
+  command: "{{zookeeper['base_dir']}}/bin/zkServer.sh start"
+  when: service_zookeeper_status | failed
+
+- name: Zookeeper Home symlink
+  file:
+    src: "{{zookeeper['base_dir']}}"
+    dest: "{{zookeeper['home']}}"
+    state: link
+
+
+################################################################################################
+#
+#                             Druid
+#
+################################################################################################
+- name: Create Druid folder
+  file: "path={{druid['base_dir']}} state=directory"
+
+- name: Download and utar Druid
+  unarchive:
+    src: "http://static.druid.io/artifacts/releases/druid-{{druid_version}}-bin.tar.gz"
+    dest: "{{druid['base_dir']}}"
+    creates: "{{druid['base_dir']}}/lib/druid-services-{{druid_version}}.jar"
+    extra_opts: --strip-components=1
+    remote_src: True
+
+- name: Check if Druid initialized
+  command: "ls -1d {{druid['base_dir']}}/var/tmp/"
+  register: druid_initialized
+  ignore_errors: True
+
+- name: Init Druid
+  command: "bash -c 'cd {{druid['base_dir']}} && bin/init'"
+  when: druid_initialized | failed
+
+- name: Create Druid bin folder
+  file: "path={{druid['base_dir']}}/bin2/ state=directory"
+
+
+- name: Druid service JVM options
+  template:
+    src: "services/{{ item }}/jvm.config"
+    dest: "{{druid['base_dir']}}/conf/druid/{{ item }}/jvm.config"
+    mode: 0755
+  with_items: "{{ druid['services'] }}"
+
+- name: Druid runtime options
+  template:
+    src: "services/{{ item }}/runtime.properties"
+    dest: "{{druid['base_dir']}}/conf/druid/{{ item }}/runtime.properties"
+    mode: 0755
+  with_items: "{{ druid['services'] }}"
+
+- name: Druid common options
+  template:
+    src: "services/_common/{{ item }}"
+    dest: "{{druid['base_dir']}}/conf/druid/_common/{{ item }}"
+    mode: 0755
+  with_items: "{{ ['common.runtime.properties', 'log4j2.xml'] }}"
+
+#- name: Druid init scripts
+#  template:
+#    src: "{{ item }}.sh.j2"
+#    dest: "{{druid['base_dir']}}/bin2/{{ item }}.sh"
+#    mode: 0755
+#  with_items: "{{ druid['services'] }}"
+
+- name: Druid init scripts
+  template:
+    src: "init-script-template.sh.j2"
+    dest: "{{druid['base_dir']}}/bin/{{ item }}.sh"
+    mode: 0755
+  vars:
+    druid_service: "{{item}}"
+  with_items: "{{ druid['services'] }}"
+
+- name: Druid init scripts symlinks
+  file:
+    src: "{{druid['base_dir']}}/bin/{{item}}.sh"
+    dest: "/etc/init.d/druid-{{item}}"
+    state: link
+  with_items: "{{ druid['services'] }}"
+
+- name: Add druid init script to system
+  command: "chkconfig --add druid-{{item}}"
+  with_items: "{{ druid['services'] }}"
+
+- name: Start Druid Services
+  service:
+    name: "druid-{{item}}"
+    state: started
+    use: sysv
+  with_items: "{{ druid['services'] }}"
+
+- name: Druid Home symlink
+  file:
+    src: "{{druid['base_dir']}}"
+    dest: "{{druid['home']}}"
+    state: link
+

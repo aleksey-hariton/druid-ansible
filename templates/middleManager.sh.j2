@@ -1,0 +1,3 @@
+#!/bin/sh
+#
+ps -ef | grep "server middleManage[r]" || java `cat conf-quickstart/druid/middleManager/jvm.config | xargs` -cp "conf-quickstart/druid/_common:conf-quickstart/druid/middleManager:lib/*" io.druid.cli.Main server middleManager >> /tmp/middleManager.log &

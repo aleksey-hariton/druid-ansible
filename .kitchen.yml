@@ -1,21 +1,22 @@
 ---
 driver:
   name: gce
-  google_project: redguide-169212
+  project: redguide-169212
   zone: us-east1-c
-  machine_type: g1-small
-  google_client_email: aleksey.hariton@gmail.com
-  google_json_key_location: /home/stalker/Downloads/RedGuide-ecdbaf707e13.json
+  machine_type: n1-standard-2
+  client_email: aleksey.hariton@gmail.com
+  json_key_location: /home/stalker/Downloads/RedGuide-ecdbaf707e13.json
   service_account_name: 319714938377-compute@developer.gserviceaccount.com
 
 provisioner:
   name: ansible_playbook
-  roles_path: roles
-  hosts: tomcat-servers
+  role_name: druid
+  roles_path: .
+  hosts: druid-servers
   require_ansible_repo: true
   ansible_verbose: true
   ansible_version: latest
-  require_chef_for_busser: false
+  require_chef_for_busser: true
 
 platforms:
   - name: centos-7

@@ -1,0 +1,31 @@
+#!/bin/bash -eu
+#
+#
+# druid-{{druid_service}}       Bring up/down {{druid_service}}
+#
+# chkconfig: 2345 10 90
+# description: Start/stop druid {{druid_service}}
+#
+### BEGIN INIT INFO
+# Provides: $druid-{{druid_service}}
+# Should-Start:
+# Short-Description: Bring up/down Druid {{druid_service}}
+# Description: Bring up/down Druid {{druid_service}}
+### END INIT INFO
+
+usage="Usage: {{druid_service}}.sh (start|stop|status)"
+
+if [ $# -lt 1 ]; then
+  echo $usage
+  exit 1
+fi
+
+_script=$(realpath $0)
+
+cd $(dirname $_script)/../
+
+if [[ $1 == status ]]; then
+  $(dirname $_script)/node.sh {{druid_service}} status
+else
+  $(dirname $_script)/node.sh {{druid_service}} status || $(dirname $_script)/node.sh {{druid_service}} $1
+fi
