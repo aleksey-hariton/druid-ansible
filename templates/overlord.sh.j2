@@ -1,3 +1,0 @@
-#!/bin/sh
-#
-ps -ef | grep "server overlor[d]" || java `cat conf-quickstart/druid/overlord/jvm.config | xargs` -cp "conf-quickstart/druid/_common:conf-quickstart/druid/overlord:lib/*" io.druid.cli.Main server overlord >> /tmp/overlord.log &

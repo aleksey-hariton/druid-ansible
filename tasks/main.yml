@@ -97,13 +97,6 @@
     mode: 0755
   with_items: "{{ ['common.runtime.properties', 'log4j2.xml'] }}"
 
-#- name: Druid init scripts
-#  template:
-#    src: "{{ item }}.sh.j2"
-#    dest: "{{druid['base_dir']}}/bin2/{{ item }}.sh"
-#    mode: 0755
-#  with_items: "{{ druid['services'] }}"
-
 - name: Druid init scripts
   template:
     src: "init-script-template.sh.j2"
